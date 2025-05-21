@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情感分析系统</title>
+    <style>
+        /* 保留原有样式基础上新增以下内容 */
+
+        .system-title {
+            text-align: center;
+            color: #2c3e50;
+            margin: 20px 0 30px;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .system-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #409eff;
+            border-radius: 2px;
+        }
+
+        /* 调整容器间距 */
+
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 50px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #409eff;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #409eff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #337ecc;
+        }
+
+        #responseContainer {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .user-message {
+            background-color: #fff;
+            margin-left: 20%;
+            border: 1px solid #ddd;
+        }
+
+        .bot-message {
+            background-color: #409eff;
+            color: white;
+            margin-right: 20%;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 标题移动到最上方 -->
+        <h1 class="system-title">情感分析系统</h1>
+
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="请输入需要分析的文本...">
+            <button onclick="handleSubmit()">分析</button>
+        </div>
+
+        <div id="responseContainer"></div>
+    </div>
+
+    <script>
+
+        // 修改后的请求处理函数
+        async function handleSubmit() {
+            const inputElement = document.getElementById('userInput');
+            const userInput = inputElement.value.trim();
+
+            if (!userInput) return;
+
+            inputElement.value = '';
+            addMessage(userInput, 'user');
+
+            try {
+                // 发送POST请求到后端
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: userInput
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    addMessage(data.result, 'bot');
+                } else {
+                    throw new Error(data.message || '服务器返回未知错误');
+                }
+            } catch (error) {
+                addMessage(`请求失败：${error.message}`, 'bot');
+            }
+        }
+
+        function addMessage(content, sender) {
+            const container = document.getElementById('responseContainer');
+            const messageDiv = document.createElement('div');
+
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = content;
+
+            container.appendChild(messageDiv);
+
+            // 自动滚动到底部
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
